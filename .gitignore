@@ -1,0 +1,37 @@
+# Laravel-specific files and directories
+/public/storage
+/storage/*.key
+/storage/pail
+.env
+.env.*
+/vendor
+
+# Cache and testing-related files
+.phpunit.cache
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+
+# Node.js and npm-specific files
+/node_modules
+/npm-debug.log
+yarn-error.log
+
+# Laravel Mix output
+/public/build
+/public/hot
+
+# Editor/IDE-specific files and directories
+/.idea
+/.vscode
+/.nova
+/.fleet
+/.zed
+
+# Other project-related files
+.phpactor.json
+
+# OS-specific files
+.DS_Store
+Thumbs.db
