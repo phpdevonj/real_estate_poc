@@ -1,6 +1,6 @@
 <template>
     <Head title=" | Dashboard"></Head>
-    <h1> Welcome Admin User</h1>
+    <h1> Welcome {{$page.props.auth.user.name }}</h1>
     <div id="home">
         <div class="lg:flex justify-between items-center mb-6">
 

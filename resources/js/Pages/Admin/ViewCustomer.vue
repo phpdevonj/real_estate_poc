@@ -14,17 +14,52 @@
                     /> -->
                 </div>
             </div>
-            <table class="w-3/4 mx-auto p-2">
+            <table class="w-full mx-auto p-2">
                 <thead>
                     <tr class="bg-slate-300">
                         <th class="text-left p-2">Name</th>
                         <th class="text-left p-2">Address</th>
                         <th class="text-left p-2">Mobile</th>
                         <th class="text-left p-2">Email</th>
+                        <th class="text-left p-2">Action</th>
                     </tr>
                 </thead>
-                <tbody></tbody>
+                <tbody>
+                    <tr v-for="customer in customers.data" :key="customer.id">
+                        <td>{{ customer.name }}</td>
+                        <td>{{ customer.address }}</td>
+                        <td>{{ customer.mobile }}</td>
+                        <td>{{ customer.email }}</td>
+                        <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-900">
+                            <Link :href="route('admin.editcustomer',customer.id)" class="px-2 py-1 bg-blue-600 text-white rounded font-bold uppercase mr-2">Edit</Link>
+                            <!-- <Link  class="px-2 py-1 bg-red-600 text-white rounded font-bold uppercase mr-2">Delete</Link> -->
+                        </td>
+                    </tr>
+                </tbody>
             </table>
+            <div class="w-full mx-auto p-2">
+            <Link
+                v-for="link in customers.links"
+                :key="link.label"
+                v-html="link.label"
+                :href="link.url"
+                class="p-1 m-1"
+                :class="{
+                    'text-slate-300': !link.url,
+                    'text-blue-500 font-medium': link.active,
+                }"
+            >
+            </Link>
+            <p class="text-slate-600 text-sm">
+                Showing {{ customers.from }} to {{ customers.to }} of {{ customers.total }}
+            </p>
+        </div>
         </div>
     </div>
 </template>
+<script setup>
+const props = defineProps({
+  customers: Array, // Expecting an array directly, not an object with a 'data' property
+});
+
+</script>

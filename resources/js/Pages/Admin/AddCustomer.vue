@@ -11,7 +11,12 @@ const form = useForm({
 
 // Submit the form
 const submit = () => {
-    form.post(route("admin.addcustomer"));
+    form.post(route("admin.addcustomer"), {
+        onError: (errors) => {(errors)},
+        onSuccess: () => {
+                    form.reset(); // Clear form values after successful submission
+                },
+    });
 };
 
 // Reset the form
@@ -23,6 +28,7 @@ const cancel = () => {
 <template>
     <Head title=" | Add Customer" />
     <div class="m-auto bg-slate-200 p-3">
+        <!-- <p class="p-4 bg-green-400">{{ $page.props.flash.message }}</p> -->
         <h1 class="text-center">Create Customer</h1>
         <form @submit.prevent="submit">
             <TextInput name="Name" v-model="form.name" :message="form.errors.name" />

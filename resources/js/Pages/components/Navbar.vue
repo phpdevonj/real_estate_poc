@@ -43,13 +43,16 @@
         >
             <a href="#" class="block px-4 py-2 hover:bg-gray-200">Account</a>
             <a href="#" class="block px-4 py-2 hover:bg-gray-200">Settings</a>
-            <a href="#" class="block px-4 py-2 hover:bg-gray-200">Logout</a>
+            <Link class="block px-4 py-2 hover:bg-gray-200" method="post" :href="route('logout')">Logout</Link>
         </div>
         <!-- dropdown menu end -->
     </div>
 </template>
 
 <script>
+import { Link } from '@inertiajs/vue3';
+import { route } from '../../../../vendor/tightenco/ziggy/src/js';
+
 export default {
     name: "Navbar",
     data() {
