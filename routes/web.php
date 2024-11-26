@@ -2,9 +2,12 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\UserController;
 use App\Models\Customers;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Models\User;
+use App\Enums\UserType;
 
 Route::middleware('guest')->group(function () {
     Route::get('/', function () {
@@ -31,8 +34,22 @@ Route::middleware('auth')->group(function () {
 
         Route::put('/updatecustomer/{id}', [CustomerController::class, 'update'])->name('admin.updatecustomer');
 
-        Route::inertia('/adduser', 'Admin/AddUser')->name('admin.adduser');
-        Route::inertia('/viewuser', 'Admin/ViewUser')->name('admin.viewuser');
+        // Route::inertia('/adduser', 'Admin/AddUser')->name('admin.adduser');
+        Route::inertia('/adduser', 'Admin/AddUser', [
+            'userTypes' => UserType::toSelectArray(),
+        ])->name('admin.adduser');
+        Route::post('/adduser', [UserController::class, 'store']);
+        Route::inertia('/viewuser', 'Admin/ViewUser', [
+            'user' => user::paginate(10),
+        ])->name('admin.viewuser');
+
+        Route::get('/edituser/{id}', function ($id) {
+            $user = User::find($id);
+            return Inertia::render('Admin/EditUser', ['user' => $user]);
+        })->name('admin.edituser');
+
+        Route::put('/updateuser/{id}', [UserController::class, 'update'])->name('admin.updateuser');
+
         Route::inertia('/addproperties', 'Admin/AddProperties')->name('admin.addproperties');
         Route::inertia('/viewproperties', 'Admin/ViewProperties')->name('admin.viewproperties');
     });

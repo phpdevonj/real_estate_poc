@@ -57,7 +57,7 @@
                             'bg-slate-700 p-3 rounded':
                                 $page.component === 'Auth/Login',
                         }"
-                        >login</Link
+                        >Login</Link
                     >
                 </div>
             </nav>
