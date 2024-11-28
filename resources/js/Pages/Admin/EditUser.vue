@@ -1,7 +1,8 @@
 <script setup>
-import { ref } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import TextInput from "../components/TextInput.vue";
+import { ref, watch, computed } from "vue";
+import { router } from "@inertiajs/vue3";
 
 const Status = Object.freeze({
     Active: 1,
@@ -9,35 +10,44 @@ const Status = Object.freeze({
 });
 
 const props = defineProps({
-    userTypes: Object, // Roles dropdown options
+    user: {
+        type: Object,
+        default: () => ({}),
+    },
+    userTypes: Object,
     status: {
         type: Number,
-        default: null, // Default status value
+        default: null,
     },
 });
 
 const emit = defineEmits(["update:status"]);
-
 const form = useForm({
-    username: null,
-    address: null,
-    mobile: null,
-    name: null,
-    email: null,
-    password: null,
-    avatar: null,
-    status: null,
-    role: null,
+    id: props.user.id || null,
+    avatar: props.user.avatar || "",
+    username: props.user.username || "",
+    name: props.user.name || "",
+    address: props.user.address || "",
+    mobile: props.user.mobile || "",
+    email: props.user.email || "",
+    password: "",
+    status: props.user.status || 1,
+    role: props.user.role || "",
 });
 
 const fileError = ref(null);
-const selectedRole = ref(form.role); // Manage roles dropdown
-const selectedStatus = ref(form.status); // Local state for status dropdown
+const selectedRole = ref(form.role);
+const selectedStatus = ref(form.status);
 
-// Handle file input validation
 const change = (e) => {
     const file = e.target.files[0];
-    if (file.size > 3072 * 1024) {
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"]; // Allowed MIME types
+
+    if (!allowedTypes.includes(file.type)) {
+        fileError.value = "Invalid file type. Only JPG, JPEG, and PNG are allowed.";
+        form.avatar = null;
+        form.preview = null;
+    } else if (file.size > 3072 * 1024) {
         fileError.value = "File size should not exceed 3 MB.";
         form.avatar = null;
         form.preview = null;
@@ -48,37 +58,46 @@ const change = (e) => {
     }
 };
 
-// Sync status changes
 const updateStatus = (value) => {
     form.status = value;
-    // any other logic for handling status change
+    emit("update:status", value);
 };
 
-// Submit the form
+watch(selectedStatus, (value) => {
+    updateStatus(value);
+});
+
 const submit = () => {
-    if (fileError.value) {
-        return; // Prevent submission if there's a file error
-    }
-    form.post(route("admin.adduser"), {
-        onError: (errors) => {
-            console.error(errors);
-        },
-        onSuccess: () => {
-            form.reset(); // Clear form values after successful submission
-        },
-    });
-};
+    try {
+            router.post(`/admin/updateuser/${form.id}`, {
+                _method: 'put',
+                id: form.id,
+                avatar: form.avatar,
+                username: form.username,
+                name: form.name,
+                address: form.address,
+                mobile: form.mobile,
+                //email: form.email,
+                password: "",
+                status: form.status,
+                role: form.role,
+            }, {
+                onError: (errors) => {
+                    form.errors = errors;
+                },
+            });
+        } catch (error) {
+            console.error("An unexpected error occurred:", error);
+            form.errors.general = "An unexpected error occurred. Please try again later.";
+        }
 
-// Reset the form
-const cancel = () => {
-    form.reset();
 };
 </script>
 
 <template>
-    <Head title=" | Add User" />
+    <Head title=" | Edit User" />
     <div class="m-auto bg-slate-200 p-3">
-        <h1 class="text-center">Create User</h1>
+        <h1 class="text-center">Edit User Details</h1>
         <form @submit.prevent="submit">
             <div class="grid place-items-center">
                 <div
@@ -93,7 +112,10 @@ const cancel = () => {
                     <input type="file" id="avatar" @input="change" hidden />
                     <img
                         class="object-cover w-28 h-28"
-                        :src="form.preview ?? '/storage/avatars/default.jpg'"
+                        :src=" form.preview ||(form.avatar
+                                ? '/storage/' + form.avatar
+                                : '/storage/avatars/default.jpg')
+                        "
                     />
                 </div>
                 <p class="error mt-2">{{ form.errors.avatar }}</p>
@@ -104,7 +126,6 @@ const cancel = () => {
             <TextInput
                 name="Username"
                 v-model="form.username"
-
             />
             <TextInput
                 name="Name"
@@ -114,7 +135,7 @@ const cancel = () => {
             <TextInput
                 name="Address"
                 v-model="form.address"
-
+                :message="form.errors.address"
             />
             <TextInput
                 name="Mobile"
@@ -124,11 +145,12 @@ const cancel = () => {
             <TextInput
                 name="Email"
                 v-model="form.email"
-                :message="form.errors.email"
+                readonly
             />
             <TextInput
                 name="Password"
                 v-model="form.password"
+                placeholder="Leave blank to keep current password"
                 :message="form.errors.password"
             />
             <!-- Status Dropdown -->
@@ -155,28 +177,18 @@ const cancel = () => {
                     <option
                         v-for="(value, key) in userTypes"
                         :key="key"
-                        :value="key"
+                        :value="parseInt(key)"
                     >
                         {{ value }}
                     </option>
                 </select>
             </div>
-
-
             <div class="flex justify-between mt-4">
                 <button
                     class="bg-blue-400 p-3 rounded"
                     :disabled="form.processing"
                 >
-                    Submit
-                </button>
-                <button
-                    type="button"
-                    class="bg-gray-400 p-3 rounded"
-                    :disabled="form.processing"
-                    @click="cancel"
-                >
-                    Cancel
+                    Update
                 </button>
             </div>
         </form>

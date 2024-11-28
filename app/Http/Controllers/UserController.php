@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Storage;
 
 class UserController extends Controller
 {
     public function store(Request $request)
-    {//dd($request);
-        // Validate the incoming request data
+    {
         $fields = $request->validate([
             'username' => ['max:255'],
             'name' => ['required', 'max:255'],
@@ -17,25 +17,66 @@ class UserController extends Controller
             'mobile' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10', 'max:10'],
             'email' => ['required', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'min:8'],
-            'avatar' => ['nullable', 'image', 'max:3072'], // Maximum file size: 3MB
+            'avatar' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:3072'],
             'status' => ['required', 'integer', 'in:0,1'],
-            'role' => ['required'], // Status must be Active or Inactive
+            'role' => ['required'],
         ]);
+
         $fields['username'] = strtolower(str_replace(' ', '_', $request->username));
-//dd($fields);
-        // Handle file upload for avatar
         if ($request->hasFile('avatar')) {
-            $fields['avatar'] = $request->file('avatar')->store('avatars', 'public');
+            $fields['avatar'] = Storage::disk('public')->put('avatars', $request->avatar);
         }
 
-        // Encrypt the password before saving
         $fields['password'] = bcrypt($fields['password']);
-//dd($fields);
-        // Create the user
+        //dd($fields);
         User::create($fields);
-
-        // Redirect with a success message
         return redirect()->route('admin.adduser')->with('greet', 'User successfully added!');
+    }
+    public function edit($id){
+        return redirect()->route('admin.edituser', ['id' => $id]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        //dd($request);
+        $request->validate([
+            'username' => 'string|max:255',
+            'avatar' => $request->hasFile('avatar') ? 'nullable|image|mimes:jpeg,png,jpg|max:3072' : 'nullable', // Only validate if file is uploaded
+            'name' => 'required|string|max:255',
+            'address' => 'nullable|string|max:255',
+            'mobile' => 'required|string|max:20', // Adjust validation as needed
+            'status' => 'required|integer',
+            'role' => 'required|integer',
+            'password' => 'nullable|min:8|confirmed',
+        ]);
+        //dd($request);
+        $user = User::findOrFail($id);
+
+        // Update fields except for email (as it's read-only)
+        $user->username = $request->input('username');
+        $user->name = $request->input('name');
+        $user->address = $request->input('address');
+        $user->mobile = $request->input('mobile');
+        $user->status = $request->input('status');
+        $user->role = $request->input('role');
+
+        if ($request->hasFile('avatar')) {
+            // Delete the old avatar if it exists
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = $path;
+        }
+        if ($request->filled('password')) {
+            // Hash the password before saving
+            $user->password = Hash::make($request->input('password'));
+        }
+
+        $user->save();
+
+        return redirect()->route('admin.viewuser')->with('greet', 'User successfully updated!');
     }
 
 }

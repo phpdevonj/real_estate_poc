@@ -40,12 +40,21 @@ Route::middleware('auth')->group(function () {
         ])->name('admin.adduser');
         Route::post('/adduser', [UserController::class, 'store']);
         Route::inertia('/viewuser', 'Admin/ViewUser', [
-            'user' => user::paginate(10),
+            'users' => user::paginate(10),
+            'userTypes' => UserType::toSelectArray(),
         ])->name('admin.viewuser');
 
+        // Route::get('/edituser/{id}', function ($id) {
+        //     $user = User::find($id);
+        //     return Inertia::render('Admin/EditUser', ['user' => $user]);
+        // })->name('admin.edituser');
         Route::get('/edituser/{id}', function ($id) {
             $user = User::find($id);
-            return Inertia::render('Admin/EditUser', ['user' => $user]);
+            $userTypes = UserType::toSelectArray(); // Fetch the userTypes array
+            return Inertia::render('Admin/EditUser', [
+                'user' => $user,
+                'userTypes' => $userTypes, // Pass the userTypes to the component
+            ]);
         })->name('admin.edituser');
 
         Route::put('/updateuser/{id}', [UserController::class, 'update'])->name('admin.updateuser');
