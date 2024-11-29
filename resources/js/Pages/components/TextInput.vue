@@ -18,9 +18,10 @@ defineProps({
 </script>
 
 <template>
-    <div class="mb-6 w-full">
-        <label class="block text-left">{{ name }}</label>
+    <div class="mb-2 w-full flex pb-1">
+        <label class="block text-left w-48">{{ name }}</label>
         <!-- Pass all remaining attributes -->
+        <div class="w-96">
         <input
             :type="type"
             v-bind="$attrs"
@@ -29,5 +30,6 @@ defineProps({
             class="border-solid border-2 rounded w-full"
         />
         <small class="text-red-500" v-if="message">{{ message }}</small>
+    </div>
     </div>
 </template>

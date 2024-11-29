@@ -38,7 +38,6 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
-        //dd($request);
         $request->validate([
             'username' => 'string|max:255',
             'avatar' => $request->hasFile('avatar') ? 'nullable|image|mimes:jpeg,png,jpg|max:3072' : 'nullable', // Only validate if file is uploaded
@@ -47,12 +46,11 @@ class UserController extends Controller
             'mobile' => 'required|string|max:20', // Adjust validation as needed
             'status' => 'required|integer',
             'role' => 'required|integer',
-            'password' => 'nullable|min:8|confirmed',
+            'password' => 'sometimes|min:8',
         ]);
-        //dd($request);
+
         $user = User::findOrFail($id);
 
-        // Update fields except for email (as it's read-only)
         $user->username = $request->input('username');
         $user->name = $request->input('name');
         $user->address = $request->input('address');
@@ -61,17 +59,15 @@ class UserController extends Controller
         $user->role = $request->input('role');
 
         if ($request->hasFile('avatar')) {
-            // Delete the old avatar if it exists
             if ($user->avatar) {
                 Storage::disk('public')->delete($user->avatar);
             }
-
             $path = $request->file('avatar')->store('avatars', 'public');
             $user->avatar = $path;
         }
+
         if ($request->filled('password')) {
-            // Hash the password before saving
-            $user->password = Hash::make($request->input('password'));
+            $user->password = bcrypt($request->input('password'));
         }
 
         $user->save();

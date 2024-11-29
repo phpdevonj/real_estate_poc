@@ -27,9 +27,11 @@
             </div>
 
             <!-- right navbar -->
-            <div class="flex items-center relative">
+            <div class="flex items-center relative" :v-if="$page.props.auth.user">
                 <img
-                    src="https://a7sas.net/wp-content/uploads/2019/07/4060.jpeg"
+                    :src="$page.props.auth.user.avatar
+                                ? '/storage/' + $page.props.auth.user.avatar
+                                : '/storage/avatars/default.jpg'"
                     class="w-12 h-12 rounded-full shadow-lg"
                     @click="dropDownOpen = !dropDownOpen"
                 />
@@ -38,11 +40,11 @@
 
         <!-- dropdown menu -->
         <div
-            class="absolute bg-gray-100 border border-t-0 shadow-xl text-gray-700 rounded-b-lg w-48 bottom-10 right-0 mr-6"
+            class="absolute bg-gray-100 border border-t-0 shadow-xl text-gray-700 rounded-b-lg w-48 bottom-10 right-0 mr-6 top-16 table"
             :class="dropDownOpen ? '' : 'hidden'"
         >
-            <a href="#" class="block px-4 py-2 hover:bg-gray-200">Account</a>
-            <a href="#" class="block px-4 py-2 hover:bg-gray-200">Settings</a>
+            <a href="#" class="block px-4 py-2 hover:bg-gray-200">Profile</a>
+            <a href="#" class="block px-4 py-2 hover:bg-gray-200">Change Password</a>
             <Link class="block px-4 py-2 hover:bg-gray-200" method="post" :href="route('logout')">Logout</Link>
         </div>
         <!-- dropdown menu end -->

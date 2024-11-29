@@ -1,13 +1,16 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CountryController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\UserController;
 use App\Models\Customers;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\User;
 use App\Enums\UserType;
+use Illuminate\Support\Facades\DB;
 
 Route::middleware('guest')->group(function () {
     Route::get('/', function () {
@@ -21,6 +24,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     // Admin Routes
     Route::prefix('admin')->group(function () {
+        // Customer Routes
         Route::inertia('/addcustomer', 'Admin/AddCustomer')->name('admin.addcustomer');
         Route::post('/addcustomer', [CustomerController::class, 'store']);
         Route::inertia('/viewcustomer', 'Admin/ViewCustomer', [
@@ -33,21 +37,15 @@ Route::middleware('auth')->group(function () {
         })->name('admin.editcustomer');
 
         Route::put('/updatecustomer/{id}', [CustomerController::class, 'update'])->name('admin.updatecustomer');
-
-        // Route::inertia('/adduser', 'Admin/AddUser')->name('admin.adduser');
+        // User Routes
         Route::inertia('/adduser', 'Admin/AddUser', [
             'userTypes' => UserType::toSelectArray(),
         ])->name('admin.adduser');
         Route::post('/adduser', [UserController::class, 'store']);
         Route::inertia('/viewuser', 'Admin/ViewUser', [
-            'users' => user::paginate(10),
+            'users' => User::where('email', '!=', 'admin@example.com')->paginate(10),
             'userTypes' => UserType::toSelectArray(),
         ])->name('admin.viewuser');
-
-        // Route::get('/edituser/{id}', function ($id) {
-        //     $user = User::find($id);
-        //     return Inertia::render('Admin/EditUser', ['user' => $user]);
-        // })->name('admin.edituser');
         Route::get('/edituser/{id}', function ($id) {
             $user = User::find($id);
             $userTypes = UserType::toSelectArray(); // Fetch the userTypes array
@@ -59,8 +57,46 @@ Route::middleware('auth')->group(function () {
 
         Route::put('/updateuser/{id}', [UserController::class, 'update'])->name('admin.updateuser');
 
-        Route::inertia('/addproperties', 'Admin/AddProperties')->name('admin.addproperties');
-        Route::inertia('/viewproperties', 'Admin/ViewProperties')->name('admin.viewproperties');
+        // Property Routes
+        Route::inertia('/addproperty', 'Admin/AddProperty', [
+            'userTypes' => UserType::toSelectArray(),
+            'countries' => DB::table('countries')->pluck('name', 'id'),
+                'defaultData' => [
+                    'states' => [],
+                    'cities' => [],
+                    'currency' => null,
+                ],
+        ])->name('admin.addproperty');
+        Route::post('/addproperty', [PropertyController::class, 'store']);
+        Route::inertia('/viewproperty', 'Admin/ViewProperty', [
+            //'propertys' => property::paginate(10),
+            'UserTypes' => UserType::toSelectArray(),
+        ])->name('admin.viewproperty');
+
+        // Route::get('/editproperty/{id}', function ($id) {
+        //     $property = Property::find($id);
+        //     return Inertia::render('Admin/EditProperty', ['property' => $property]);
+        // })->name('admin.editproperty');
+        Route::get('/editproperty/{id}', function ($id) {
+            //$property = Property::find($id);
+            $propertyTypes = UserType::toSelectArray(); // Fetch the propertyTypes array
+            return Inertia::render('Admin/EditProperty', [
+                //'property' => $property,
+                //'userTypes' => $userTypes, // Pass the propertyTypes to the component
+            ]);
+        })->name('admin.editproperty');
+
+        Route::put('/updateproperty/{id}', [PropertyController::class, 'update'])->name('admin.updateproperty');
+        Route::get('/getcountrydata/{countryId}', function ($countryId) {
+            return response()->json([
+                'states' => DB::table('states')->where('country_id', $countryId)->pluck('name', 'id'),
+                'cities' => DB::table('cities')->where('country_id', $countryId)->pluck('name', 'id'),
+                'currency' => DB::table('countries')
+                    ->where('id', $countryId)
+                    ->select('currency', 'currency_name', 'currency_symbol')
+                    ->first(),
+            ]);
+        })->name('getcountrydata');
     });
 
     // Dashboard and Logout

@@ -78,7 +78,7 @@ const submit = () => {
                 address: form.address,
                 mobile: form.mobile,
                 //email: form.email,
-                password: "",
+                password: form.password,
                 status: form.status,
                 role: form.role,
             }, {
@@ -99,7 +99,7 @@ const submit = () => {
     <div class="m-auto bg-slate-200 p-3">
         <h1 class="text-center">Edit User Details</h1>
         <form @submit.prevent="submit">
-            <div class="grid place-items-center">
+            <div class="grid">
                 <div
                     class="relative w-28 h-28 rounded-full overflow-hidden border border-slate-300"
                 >
@@ -154,12 +154,13 @@ const submit = () => {
                 :message="form.errors.password"
             />
             <!-- Status Dropdown -->
-            <div>
-                <label for="status">Status</label>
+            <div class="flex mr-5 pb-1 mb-2">
+                <label for="status" class="w-48">Status</label>
                 <select
                     id="status"
                     v-model="form.status"
                     @change="updateStatus($event.target.value)"
+                    class="w-96"
                 >
                     <option
                         v-for="[label, value] in Object.entries(Status)"
@@ -171,9 +172,9 @@ const submit = () => {
                 </select>
             </div>
             <!-- Roles Dropdown -->
-            <div>
-                <label for="userType">Roles</label>
-                <select id="userType" v-model="form.role">
+            <div class="flex mr-5 pb-1 mb-2">
+                <label for="userType" class="w-48">Roles</label>
+                <select id="userType" v-model="form.role" class="w-96">
                     <option
                         v-for="(value, key) in userTypes"
                         :key="key"

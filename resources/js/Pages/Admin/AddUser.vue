@@ -80,7 +80,7 @@ const cancel = () => {
     <div class="m-auto bg-slate-200 p-3">
         <h1 class="text-center">Create User</h1>
         <form @submit.prevent="submit">
-            <div class="grid place-items-center">
+            <div class="grid place-items">
                 <div
                     class="relative w-28 h-28 rounded-full overflow-hidden border border-slate-300"
                 >
@@ -132,12 +132,13 @@ const cancel = () => {
                 :message="form.errors.password"
             />
             <!-- Status Dropdown -->
-            <div>
-                <label for="status">Status</label>
+            <div class="flex mr-5 pb-1 mb-2">
+                <label for="status" class="w-48">Status</label>
                 <select
                     id="status"
                     v-model="form.status"
                     @change="updateStatus($event.target.value)"
+                    class="w-96"
                 >
                     <option
                         v-for="[label, value] in Object.entries(Status)"
@@ -149,9 +150,9 @@ const cancel = () => {
                 </select>
             </div>
             <!-- Roles Dropdown -->
-            <div>
-                <label for="userType">Roles</label>
-                <select id="userType" v-model="form.role">
+            <div class="flex mr-5 pb-1 mb-2">
+                <label for="userType" class="w-48">Roles</label>
+                <select id="userType" v-model="form.role" class="w-96">
                     <option
                         v-for="(value, key) in userTypes"
                         :key="key"
