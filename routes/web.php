@@ -5,7 +5,8 @@ use App\Http\Controllers\CountryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\UserController;
-use App\Models\Customers;
+use App\Models\Country;
+use App\Models\Customer;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\User;
@@ -28,11 +29,11 @@ Route::middleware('auth')->group(function () {
         Route::inertia('/addcustomer', 'Admin/AddCustomer')->name('admin.addcustomer');
         Route::post('/addcustomer', [CustomerController::class, 'store']);
         Route::inertia('/viewcustomer', 'Admin/ViewCustomer', [
-            'customers' => Customers::paginate(10),
+            'customers' => Schema::hasTable('customers') ? Customer::paginate(10) : [],
         ])->name('admin.viewcustomer');
 
         Route::get('/editcustomer/{id}', function ($id) {
-            $customer = Customers::find($id);
+            $customer = Customer::find($id);
             return Inertia::render('Admin/EditCustomer', ['customer' => $customer]);
         })->name('admin.editcustomer');
 
@@ -43,7 +44,7 @@ Route::middleware('auth')->group(function () {
         ])->name('admin.adduser');
         Route::post('/adduser', [UserController::class, 'store']);
         Route::inertia('/viewuser', 'Admin/ViewUser', [
-            'users' => User::where('email', '!=', 'admin@example.com')->paginate(10),
+            'users' => Schema::hasTable('users') ? User::where('email', '!=', 'admin@example.com')->paginate(10) : [],
             'userTypes' => UserType::toSelectArray(),
         ])->name('admin.viewuser');
         Route::get('/edituser/{id}', function ($id) {
@@ -60,15 +61,15 @@ Route::middleware('auth')->group(function () {
         // Property Routes
         Route::inertia('/addproperty', 'Admin/AddProperty', [
             'userTypes' => UserType::toSelectArray(),
-            'countries' => DB::table('countries')->pluck('name', 'id'),
-                'defaultData' => [
+            'countries' => Schema::hasTable('country') ? Country::pluck('name', 'id') : [],
+            'defaultData' => [
                     'states' => [],
                     'cities' => [],
                     'currency' => null,
                 ],
-            'customerOptions' => Customers::pluck('name', 'id'),
-            'agentOptions' => User::where('role','1')->pluck('name', 'id'),
-            'propertySizeUnits' => DB::table('property_size_units')->pluck('unit_key', 'id'),
+            'customerOptions' => Schema::hasTable('customers') ? Customer::pluck('name', 'id') : [],
+            'agentOptions' => Schema::hasTable('users') ? User::where('role','1')->pluck('name', 'id') : [],
+            'propertySizeUnits' => Schema::hasTable('property_size_units') ? DB::table('property_size_units')->pluck('unit_key', 'id') : []     ,
         ])->name('admin.addproperty');
         Route::post('/addproperty', [PropertyController::class, 'store']);
         Route::inertia('/viewproperty', 'Admin/ViewProperty', [

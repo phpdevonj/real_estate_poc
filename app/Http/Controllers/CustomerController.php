@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Customers;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -17,7 +17,7 @@ class CustomerController extends Controller
             'mobile' => ['required', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10', 'max:10'],
             'email' => ['required', 'email', 'max:255', 'unique:customers'],
         ]);
-        Customers::create($fields);
+        Customer::create($fields);
         //Auth::login($user);
         return redirect()->route('admin.addcustomer')->with('greet', 'Succeffuly Saved');
     }
@@ -29,7 +29,7 @@ class CustomerController extends Controller
     public function update(Request $request, $id)
     {
         // Retrieve the existing customer record
-        $customer = Customers::findOrFail($id);
+        $customer = Customer::findOrFail($id);
         // Validate input fields
         $fields = $request->validate([
             'name' => ['required', 'max:255'],

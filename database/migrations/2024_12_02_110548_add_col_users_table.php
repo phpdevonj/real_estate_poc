@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('username')->after('id'); // Add username column
+            $table->string('username')->nullable()->after('id'); // Add username column
             $table->string('address')->nullable()->after('username'); // Add address column
             $table->string('mobile')->nullable()->after('address'); // Add mobile column
             $table->string('role')->default('agent')->after('mobile'); // Add role column with default value
