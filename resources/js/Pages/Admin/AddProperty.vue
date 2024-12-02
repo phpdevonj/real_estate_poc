@@ -15,6 +15,9 @@ const cities = ref(defaultData.value.cities);
 const currency = ref(defaultData.value.currency);
 const selectedState = ref(null);
 const selectedCity = ref(null);
+const customerOptions = ref(props.customerOptions);
+const agentOptions = ref(props.agentOptions);
+const propertySizeUnits = ref(props.propertySizeUnits);
 
 const form = useForm({
     title: null,
@@ -25,9 +28,9 @@ const form = useForm({
     currency: null,
     photos: [],
     size: null,
-    unit: null,
-    agent: null,
-    customer: null,
+    unit: '',
+    agent: '',
+    customer: '',
     country: selectedCountry,
     state: selectedState,
     city: selectedCity,
@@ -45,6 +48,18 @@ watch(selectedState, (value) => {
 watch(selectedCity, (value) => {
     form.city = value;
 });
+
+watch(customerOptions, (value) => {
+    form.customer = value;
+});
+watch(agentOptions, (value) => {
+    form.agent = value;
+});
+
+watch(propertySizeUnits, (value) => {
+    form.unit = value;
+});
+
 const fetchCountryData = async () => {
     if (selectedCountry.value) {
         try {
@@ -208,7 +223,8 @@ const cancel = () => {
             <div v-if="currency" class="flex mr-5 pb-1 mb-2">
                 <label class="w-48">Currency:</label>
                 <div class="w-96 p-2 bg-gray-50 border border-gray-200 rounded">
-                    {{ currency.currency_name }} ({{ currency.currency_symbol }})
+                    <!-- {{ currency.currency_name }} -->
+                     ({{ currency.currency_symbol }})
                 </div>
             </div>
 
@@ -235,8 +251,9 @@ const cancel = () => {
             <div class="flex mr-5 pb-1 mb-2">
                 <label for="unit" class="w-48">Measuring Unit</label>
                 <select id="unit" v-model="form.unit" class="w-96">
+                    <option value="">Select a unit</option>
                     <option
-                        v-for="(value, key) in unitOptions"
+                        v-for="(value, key) in propertySizeUnits"
                         :key="key"
                         :value="key"
                     >
@@ -246,9 +263,11 @@ const cancel = () => {
                 <p class="error mt-2">{{ form.errors.unit }}</p>
             </div>
 
+
             <div class="flex mr-5 pb-1 mb-2">
                 <label for="agent" class="w-48">Agent</label>
                 <select id="agent" v-model="form.agent" class="w-96">
+                    <option value="">Select an agent</option>
                     <option
                         v-for="(value, key) in agentOptions"
                         :key="key"
@@ -260,11 +279,20 @@ const cancel = () => {
                 <p class="error mt-2">{{ form.errors.agent }}</p>
             </div>
 
-            <TextInput
-                name="Customer"
-                v-model="form.customer"
-                :message="form.errors.customer"
-            />
+            <div class="flex mr-5 pb-1 mb-2">
+                <label for="customer" class="w-48">Customer</label>
+                <select id="customer" v-model="form.customer" class="w-96">
+                    <option value="">Select a customer</option>
+                    <option
+                        v-for="(value, key) in customerOptions"
+                        :key="key"
+                        :value="key"
+                    >
+                        {{ value }}
+                    </option>
+                </select>
+                <p class="error mt-2">{{ form.errors.customer }}</p>
+            </div>
 
             <div class="flex mr-5 pb-1 mb-2 justify-between mt-4">
                 <button

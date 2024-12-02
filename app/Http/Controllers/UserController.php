@@ -38,7 +38,8 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate([
+        // Base validation rules
+        $validationRules = [
             'username' => 'string|max:255',
             'avatar' => $request->hasFile('avatar') ? 'nullable|image|mimes:jpeg,png,jpg|max:3072' : 'nullable', // Only validate if file is uploaded
             'name' => 'required|string|max:255',
@@ -46,8 +47,14 @@ class UserController extends Controller
             'mobile' => 'required|string|max:20', // Adjust validation as needed
             'status' => 'required|integer',
             'role' => 'required|integer',
-            'password' => 'sometimes|min:8',
-        ]);
+        ];
+
+        // Add password validation only if the field is filled
+        if ($request->filled('password')) {
+            $validationRules['password'] = 'min:8';
+        }
+
+        $request->validate($validationRules);
 
         $user = User::findOrFail($id);
 

@@ -66,6 +66,9 @@ Route::middleware('auth')->group(function () {
                     'cities' => [],
                     'currency' => null,
                 ],
+            'customerOptions' => Customers::pluck('name', 'id'),
+            'agentOptions' => User::where('role','1')->pluck('name', 'id'),
+            'propertySizeUnits' => DB::table('property_size_units')->pluck('unit_key', 'id'),
         ])->name('admin.addproperty');
         Route::post('/addproperty', [PropertyController::class, 'store']);
         Route::inertia('/viewproperty', 'Admin/ViewProperty', [
