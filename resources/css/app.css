@@ -1,3 +1,64 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@layer utilities {
+    @import url("https://fonts.googleapis.com/css2?family=League+Spartan:wght@100;200;300;400;500;600;700;800;900&display=swap");
+    *{
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "League Spartan", sans-serif;
+    }
+    .link-after::after {
+      content: "";
+      position: absolute;
+      width: 0;
+      height: 2px;
+      background: #088178;
+      bottom: -4px;
+      left: 0px;
+      transition: width 0.3s ease; /* Optional transition effect */
+    }
+
+    .link-after:hover::after,
+    .link-after.active::after {
+      width: 35%;
+    }
+    .link-after.active{
+        color: #088178;
+    }
+    .show {
+        display: block;
+    }
+    .login-input{
+      @apply
+      w-full 
+      py-3 
+      px-2 
+      bg-[#f3f3f3] 
+      border-0 
+      outline-0 
+      shadow-none 
+      focus:shadow-inherit 
+      rounded
+      focus:ring-offset-0
+    }
+    .right-panal-active .sign-up-container{
+      animation: show 0.2s
+    }
+    .slider-bottom-content{
+      @apply
+      w-full font-semibold text-[14px]
+      h-[50px] flex items-center px-[15px] text-black absolute bottom-0 left-0
+    }
+    @keyframes show{
+      0% , 50%{
+        opacity: 0;
+        z-index: 1;
+      }
+      50.1% , 100%{
+        opacity: 1;
+        z-index: 5;
+      }
+    }
+  }
