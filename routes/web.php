@@ -61,7 +61,7 @@ Route::middleware('auth')->group(function () {
         // Property Routes
         Route::inertia('/addproperty', 'Admin/AddProperty', [
             'userTypes' => UserType::toSelectArray(),
-            'countries' => Schema::hasTable('country') ? Country::pluck('name', 'id') : [],
+            'countries' => Schema::hasTable('countries') ? Country::pluck('name', 'id') : [],
             'defaultData' => [
                     'states' => [],
                     'cities' => [],
@@ -101,6 +101,20 @@ Route::middleware('auth')->group(function () {
                     ->first(),
             ]);
         })->name('getcountrydata');
+        Route::get('/getstatecities/{stateId}', function ($stateId) {
+            return response()->json([
+                'cities' => DB::table('cities')
+                    ->where('state_id', $stateId)
+                    ->pluck('name', 'id'),
+            ]);
+        })->name('getstatecities');
+        // In your admin route group
+        Route::get('/viewproperty', [PropertyController::class, 'index'])->name('admin.viewproperty');
+        Route::delete('/property/{id}', [PropertyController::class, 'destroy'])->name('admin.deleteproperty');
+        Route::put('/property/{id}/toggle-status', [PropertyController::class, 'toggleStatus'])->name('admin.togglepropertystatus');
+
+        Route::get('/editproperty/{id}', [PropertyController::class, 'edit'])->name('admin.editproperty');
+        Route::put('/updateproperty/{id}', [PropertyController::class, 'update'])->name('admin.updateproperty');
     });
 
     // Dashboard and Logout

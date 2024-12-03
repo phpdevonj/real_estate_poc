@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('properties', function (Blueprint $table) {
+            $table->id();
             $table->string('title'); // Property title
             $table->text('description')->nullable(); // Description
             $table->string('no')->nullable(); // House or Property No

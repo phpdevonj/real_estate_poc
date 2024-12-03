@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import TextInput from "../components/TextInput.vue";
 import { usePage } from "@inertiajs/vue3";
@@ -8,33 +8,52 @@ import axios from "axios";
 const { props } = usePage();
 const countries = ref(props.countries);
 const defaultData = ref(props.defaultData);
+const property = ref(props.property);
 
-const selectedCountry = ref("");
+const selectedCountry = ref(property.value.country);
 const states = ref("");
 const cities = ref("");
 const currency = ref(defaultData.value.currency);
-const selectedState = ref(null);
-const selectedCity = ref(null);
+const selectedState = ref(property.value.state);
+const selectedCity = ref(property.value.city);
 const customerOptions = ref(props.customerOptions);
 const agentOptions = ref(props.agentOptions);
 const propertySizeUnits = ref(props.propertySizeUnits);
-const previewUrls = ref([]); // Add this with other refs
-
+const previewUrls = ref([]); // For new photos
+const existingPhotos = ref(property.value.photos_url || []); // Existing photos
+onMounted(() => {
+    console.log("Full Property Data:", property.value);
+    console.log("Photos Array:", property.value.photos);
+    console.log("Photos URLs:", property.value.photos_url);
+});
+// Initialize form with existing property data
 const form = useForm({
-    title: null,
-    description: null,
-    no: '',
-    street: null,
-    price: null,
-    currency: null,
+    title: property.value.title,
+    description: property.value.description,
+    no: property.value.no,
+    street: property.value.street,
+    price: property.value.price,
+    currency: property.value.currency,
     photos: [],
-    size: null,
-    unit: "",
-    agent: "",
-    customer: "",
-    country: "",
-    state: "",
-    city: "",
+    size: property.value.size,
+    unit: property.value.unit,
+    agent: property.value.agent_id,
+    customer: property.value.customer_id,
+    country: property.value.country,
+    state: property.value.state,
+    city: property.value.city,
+    removed_photos: [], // Track removed photos
+    _method: "PUT",
+});
+
+// Load initial data
+onMounted(async () => {
+    if (selectedCountry.value) {
+        await fetchCountryData();
+    }
+    if (selectedState.value) {
+        await fetchCities();
+    }
 });
 
 // Watch for changes to update the form
@@ -53,25 +72,12 @@ watch(selectedState, (value) => {
 watch(selectedCity, (value) => {
     form.city = value;
 });
+// Add watch to debug changes
+// watch(existingPhotos, (newValue) => {
+//     console.log("existingPhotos changed:", newValue);
+// }, { deep: true });
 
-watch(customerOptions, (value) => {
-    form.customer = value;
-});
-watch(agentOptions, (value) => {
-    form.agent = value;
-});
-
-watch(propertySizeUnits, (value) => {
-    form.unit = value;
-});
-// Add a watch for selectedState to fetch cities when state changes
-watch(selectedState, (value) => {
-    if (value) {
-        fetchCities();
-    }
-    form.state = value || "";
-});
-// Add a new function to fetch cities when state changes
+// Fetch functions
 const fetchCities = async () => {
     if (selectedState.value) {
         try {
@@ -79,8 +85,6 @@ const fetchCities = async () => {
                 route("getstatecities", selectedState.value)
             );
             cities.value = response.data.cities;
-            selectedCity.value = "";
-            form.city = "";
         } catch (error) {
             console.error("Error fetching cities:", error);
         }
@@ -90,6 +94,7 @@ const fetchCities = async () => {
         form.city = "";
     }
 };
+
 const fetchCountryData = async () => {
     if (selectedCountry.value) {
         try {
@@ -97,19 +102,11 @@ const fetchCountryData = async () => {
                 route("getcountrydata", selectedCountry.value)
             );
             states.value = response.data.states;
-            //cities.value = response.data.cities;
             currency.value = response.data.currency;
-            // Reset state and city selections when country changes
-            selectedState.value = "";
-            selectedCity.value = "";
-            form.state = "";
-            form.city = "";
-            cities.value = [];
         } catch (error) {
             console.error("Error fetching country data:", error);
         }
     } else {
-        // Reset all dependent fields when no country is selected
         states.value = [];
         cities.value = [];
         currency.value = null;
@@ -120,60 +117,74 @@ const fetchCountryData = async () => {
     }
 };
 const fileErrors = ref([]);
-
 // Handle file input validation
 const changePhotos = (e) => {
     const files = Array.from(e.target.files);
     fileErrors.value = [];
-    previewUrls.value = []; // Reset preview URLs
 
-    if (files.length > 4) {
-        fileErrors.value.push("You can upload a maximum of 4 photos.");
+    // Check total number of photos (existing + new)
+    const totalPhotos = existingPhotos.value.length + files.length;
+    if (totalPhotos > 4) {
+        fileErrors.value.push(
+            `You can only have 4 photos in total. You can remove ${
+                totalPhotos - 4
+            } existing photo(s) to add new ones.`
+        );
         e.target.value = "";
-    } else {
-        const invalidFiles = files.filter((file) => file.size > 3072 * 1024);
-        if (invalidFiles.length) {
-            fileErrors.value.push("Each photo must not exceed 3 MB.");
-            e.target.value = "";
-        } else {
-            form.photos = files;
-            // Create preview URLs immediately using URL.createObjectURL
-            files.forEach((file) => {
-                previewUrls.value.push(URL.createObjectURL(file));
-            });
-        }
+        return;
     }
+
+    const invalidFiles = files.filter((file) => file.size > 3072 * 1024);
+    if (invalidFiles.length) {
+        fileErrors.value.push("Each photo must not exceed 3MB");
+        e.target.value = "";
+        return;
+    }
+
+    form.photos = files;
+    previewUrls.value = files.map((file) => URL.createObjectURL(file));
 };
-// Add cleanup function to prevent memory leaks
-const cleanup = () => {
-    previewUrls.value.forEach((url) => URL.revokeObjectURL(url));
-    previewUrls.value = [];
+// Remove existing photo
+const removePhoto = (index) => {
+    if (confirm("Are you sure you want to remove this photo?")) {
+        form.removed_photos.push(existingPhotos.value[index]);
+        existingPhotos.value.splice(index, 1);
+    }
 };
 // Submit the form
 const submit = () => {
     if (fileErrors.value.length) {
-        return; // Prevent submission if there are file errors
+        return;
     }
-    form.post(route("admin.addproperty"), {
+    form.post(route("admin.updateproperty", property.value.id), {
         onError: (errors) => {
             console.error(errors);
         },
-        onSuccess: () => {
-            form.reset();
-        },
+        preserveScroll: true,
     });
 };
-// Reset the form
+
+// Cancel edit
 const cancel = () => {
-    form.reset();
-    cleanup();
+    window.location = route("admin.viewproperty");
 };
+// Add image error handling
+// const handleImageError = (event) => {
+//     console.error('Image failed to load:', event.target.src);
+//     // Optionally set a fallback image
+//     event.target.src = '/storage/images/no-image.png';
+// };
 </script>
+<style scoped>
+.group:hover .group-hover\:opacity-100 {
+    opacity: 1;
+}
+</style>
 
 <template>
-    <Head title=" | Add Property" />
+    <Head title=" | Edit Property" />
     <div class="m-auto bg-slate-200 p-3">
-        <h1 class="text-center">Create Property</h1>
+        <h1 class="text-center">Edit Property</h1>
         <form @submit.prevent="submit">
             <TextInput
                 name="Title"
@@ -210,10 +221,10 @@ const cancel = () => {
                 <select
                     id="country"
                     v-model="selectedCountry"
-                    @change="fetchCountryData"
                     class="w-96 border border-gray-300 rounded p-2"
+                    disabled
+                    title="Location cannot be changed after property creation"
                 >
-                    <option value="">Select a country</option>
                     <option
                         v-for="(name, id) in countries"
                         :key="id"
@@ -222,7 +233,10 @@ const cancel = () => {
                         {{ name }}
                     </option>
                 </select>
-                <p class="error mt-2">{{ form.errors.country }}</p>
+                <span class="text-sm text-gray-500 ml-2">
+                    Location cannot be changed. Create new property for
+                    different location.
+                </span>
             </div>
 
             <!-- State Dropdown -->
@@ -232,14 +246,12 @@ const cancel = () => {
                     id="state"
                     v-model="selectedState"
                     class="w-96 border border-gray-300 rounded p-2"
-                    :disabled="!selectedCountry"
+                    disabled
                 >
-                    <option value="">Select a state</option>
                     <option v-for="(name, id) in states" :key="id" :value="id">
                         {{ name }}
                     </option>
                 </select>
-                <p class="error mt-2">{{ form.errors.state }}</p>
             </div>
 
             <!-- City Dropdown -->
@@ -249,14 +261,12 @@ const cancel = () => {
                     id="city"
                     v-model="selectedCity"
                     class="w-96 border border-gray-300 rounded p-2"
-                    :disabled="!selectedState"
+                    disabled
                 >
-                    <option value="">Select a city</option>
                     <option v-for="(name, id) in cities" :key="id" :value="id">
                         {{ name }}
                     </option>
                 </select>
-                <p class="error mt-2">{{ form.errors.city }}</p>
             </div>
 
             <TextInput
@@ -268,43 +278,44 @@ const cancel = () => {
             <div v-if="currency" class="flex mr-5 pb-1 mb-2">
                 <label class="w-48">Currency:</label>
                 <div class="w-96 p-2 bg-gray-50 border border-gray-200 rounded">
-                    <!-- {{ currency.currency_name }} -->
                     {{ currency.currency_symbol }}
                 </div>
             </div>
 
-            <div class="flex mr-5 pb-1 mb-2 flex-col">
-                <div class="flex">
-                    <label for="photos" class="w-48">Photos (Max 4)</label>
-                    <input
-                        type="file"
-                        id="photos"
-                        multiple
-                        @change="changePhotos"
-                        accept="image/*"
-                        class="w-96"
-                    />
-                </div>
-                <!-- Move the preview section directly below the file input -->
-                <div v-if="previewUrls.length" class="flex gap-2 mt-2">
+ <div class="flex mr-5 pb-1 mb-2 flex-col">
+        <label class="w-48 mb-2">Property Images</label>
+
+        <!-- Image Gallery -->
+        <div class="bg-white p-4 rounded-lg shadow mb-4">
+            <!-- Existing Photos -->
+            <div v-if="existingPhotos.length" class="mb-4">
+                <h4 class="text-sm font-medium mb-2">Current Images:</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div
-                        v-for="(url, index) in previewUrls"
+                        v-for="(photo, index) in existingPhotos"
                         :key="index"
-                        class="relative w-28 h-28 overflow-hidden border border-slate-300"
+                        class="relative group"
                     >
-                        <img
-                            :src="url"
-                            class="object-cover w-28 h-28"
-                            :alt="`Preview ${index + 1}`"
-                        />
+                    <img
+                        :src="photo"
+                        class="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
+                        @error=""
+                    />
+                        <!-- Add debug info -->
+
+                        <button
+                            type="button"
+                            @click="removePhoto(index)"
+                            class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center
+                                   opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        >
+                            ×
+                        </button>
                     </div>
                 </div>
-                <p v-if="fileErrors.length" class="text-red-500 mt-2">
-                    {{ fileErrors.join(", ") }}
-                </p>
-                <p class="error mt-2">{{ form.errors.photos }}</p>
             </div>
-
+        </div>
+</div>
             <TextInput
                 name="Size"
                 v-model="form.size"
@@ -361,7 +372,7 @@ const cancel = () => {
                     class="bg-blue-400 p-3 rounded"
                     :disabled="form.processing"
                 >
-                    Submit
+                    Update
                 </button>
                 <button
                     type="button"
