@@ -57,7 +57,7 @@ class Property extends Model
         if (!$this->photos) return [];
 
         return array_map(function ($photo) {
-            return Storage::disk('public')->url($photo);
+            return '/storage/property_photos/' . basename($photo);
         }, $this->photos);
     }
     public function countryData()

@@ -42,4 +42,11 @@ class CustomerController extends Controller
         return redirect()->route('admin.viewcustomer', $customer->id)->with('greet', 'Successfully Updated');
     }
 
+    public function destroy($id)
+    {
+        $customer = Customer::findOrFail($id);
+        $customer->delete();
+        return redirect()->route('admin.viewcustomer')->with('greet', 'Successfully Deleted');
+    }
+
 }

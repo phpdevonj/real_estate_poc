@@ -48,7 +48,6 @@ class UserController extends Controller
             'status' => 'required|integer',
             'role' => 'required|integer',
         ];
-
         // Add password validation only if the field is filled
         if ($request->filled('password')) {
             $validationRules['password'] = 'min:8';
@@ -81,5 +80,10 @@ class UserController extends Controller
 
         return redirect()->route('admin.viewuser')->with('greet', 'User successfully updated!');
     }
-
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
+        $user->delete();
+        return redirect()->route('admin.viewuser')->with('greet', 'User successfully deleted!');
+    }
 }

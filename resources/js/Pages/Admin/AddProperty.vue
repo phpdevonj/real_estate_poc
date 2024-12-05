@@ -5,21 +5,34 @@ import TextInput from "../components/TextInput.vue";
 import { usePage } from "@inertiajs/vue3";
 import axios from "axios";
 
-const { props } = usePage();
+// Define props first
+const props = defineProps({
+    countries: Object,
+    customerOptions: Object,
+    propertySizeUnits: Object,
+    agentOptions: Object,
+    user: Object,
+    defaultData: Object
+});
+console.log('=== ADD PROPERTY VUE DEBUG ===');
+console.log('User:', props.user);
+console.log('Agent Options:', props.agentOptions);
+
+const user = ref(props.user);
+const agentOptions = ref(props.agentOptions);
+
+
 const countries = ref(props.countries);
 const defaultData = ref(props.defaultData);
-
 const selectedCountry = ref("");
 const states = ref("");
 const cities = ref("");
-const currency = ref(defaultData.value.currency);
+const currency = ref(defaultData.value?.currency);
 const selectedState = ref(null);
 const selectedCity = ref(null);
 const customerOptions = ref(props.customerOptions);
-const agentOptions = ref(props.agentOptions);
 const propertySizeUnits = ref(props.propertySizeUnits);
-const previewUrls = ref([]); // Add this with other refs
-
+const previewUrls = ref([]);
 const form = useForm({
     title: null,
     description: null,
@@ -30,7 +43,7 @@ const form = useForm({
     photos: [],
     size: null,
     unit: "",
-    agent: "",
+    agent: Number(user.value?.role) === 1 ? user.value.id : "", // Set default agent for agent users
     customer: "",
     country: "",
     state: "",
@@ -328,8 +341,13 @@ const cancel = () => {
 
             <div class="flex mr-5 pb-1 mb-2">
                 <label for="agent" class="w-48">Agent</label>
-                <select id="agent" v-model="form.agent" class="w-96">
-                    <option value="">Select an agent</option>
+                <select
+                    id="agent"
+                    v-model="form.agent"
+                    class="w-96"
+                    :disabled="Number(user?.role) === 1"
+                >
+                    <option value="" v-if="Number(user?.role) === 0">Select an agent</option>
                     <option
                         v-for="(value, key) in agentOptions"
                         :key="key"

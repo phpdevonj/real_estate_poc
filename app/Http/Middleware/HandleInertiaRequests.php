@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\UserType;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -36,12 +37,16 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return array_merge(parent::share($request), [
-            'auth.user' => fn () => $request->user()
-                ? $request->user()->only('id', 'name')
-                : null,
+            'auth' => [
+                'user' => $request->user() ? [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'role' => (int)$request->user()->role,  // Use role directly as an integer
+                ] : null,
+            ],
 
             'flash' => [
-                'message' => fn () => $request->session()->get('greet')
+                'message' => fn () => $request->session()->get('greet', 'Welcome!'),
             ],
         ]);
 

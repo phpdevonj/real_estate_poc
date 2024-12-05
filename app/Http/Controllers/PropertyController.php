@@ -10,10 +10,11 @@ use App\Models\State;
 use DB;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Schema;
 use Storage;
 use App\Models\Property;
 use App\Models\User;
-
+use App\Enums\UserType;
 class PropertyController extends Controller
 {
     public function store(Request $request)
@@ -43,7 +44,10 @@ class PropertyController extends Controller
             'photos' => ['nullable', 'array'],
             'photos.*' => ['file', 'mimes:jpg,jpeg,png', 'max:3072'],
         ]);
-
+        // If user is an agent, force the agent field to be their own ID
+        if (auth()->user()->type === UserType::Agent) {
+            $fields['agent'] = auth()->id();
+        }
         // Add the currency from the country
         $fields['currency'] = $countryCurrency->currency;  // or currency_symbol
 
@@ -57,6 +61,9 @@ class PropertyController extends Controller
 
                 return $path;
             }, $request->file('photos'));
+        } else {
+            // Set empty array when no photos are uploaded
+            $fields['photos'] = [];
         }
 
         $fields['agent_id'] = $fields['agent'];
@@ -73,6 +80,14 @@ class PropertyController extends Controller
 
     public function index()
     {
+        $user = auth()->user();
+
+        // \Log::info('User Role Check:', [
+        //     'user_id' => $user->id,
+        //     'role' => $user->role,
+        //     'is_admin' => $user->role === 0
+        // ]);
+
         $properties = Property::with([
             'agent:id,name',
             'customer:id,name',
@@ -84,11 +99,13 @@ class PropertyController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        // Add this for debugging
-        //dd($properties);
-
         return Inertia::render('Admin/ViewProperty', [
-            'properties' => $properties
+            'properties' => $properties,
+            'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'role' => (int)$user->role  // Ensure role is cast to integer
+                ],
         ]);
     }
 
@@ -155,27 +172,37 @@ class PropertyController extends Controller
             'customer' => ['required', 'integer'],
             'photos' => ['nullable', 'array'],
             'photos.*' => ['file', 'mimes:jpg,jpeg,png', 'max:3072'],
+            'removed_photos' => ['nullable', 'array']
         ]);
-
-        // Handle new photos
-        if ($request->hasFile('photos')) {
-            $newPhotos = array_map(function ($photo) {
-                return Storage::disk('public')->put('property_photos', $photo);
-            }, $request->file('photos'));
-
-            $fields['photos'] = array_merge($property->photos ?? [], $newPhotos);
-        } else {
-            $fields['photos'] = $property->photos;
-        }
-
+        // Initialize photos array
+        $updatedPhotos = is_array($property->photos) ? $property->photos : [];
         // Handle removed photos
         if ($request->removed_photos) {
             foreach ($request->removed_photos as $photo) {
-                Storage::disk('public')->delete($photo);
-                $fields['photos'] = array_diff($fields['photos'], [$photo]);
+                $filename = 'property_photos/' . basename($photo);
+                // Delete from storage
+                if (Storage::disk('public')->exists($filename)) {
+                    Storage::disk('public')->delete($filename);
+                }
+                // Remove from photos array
+                $updatedPhotos = array_values(array_filter($updatedPhotos, function($existingPhoto) use ($filename) {
+                    return $existingPhoto !== $filename;
+                }));
             }
         }
+        // Handle new photos
+        if ($request->hasFile('photos')) {
+            $newPhotos = array_map(function ($photo) {
+                $filename = time() . '_' . $photo->getClientOriginalName();
+                return $photo->storeAs('property_photos', $filename, 'public');
+            }, $request->file('photos'));
 
+            $updatedPhotos = array_merge($updatedPhotos, $newPhotos);
+        }
+        // Ensure we don't exceed 4 photos
+        $updatedPhotos = array_slice($updatedPhotos, 0, 4);
+
+        $fields['photos'] = $updatedPhotos;
         $fields['agent_id'] = $fields['agent'];
         $fields['customer_id'] = $fields['customer'];
         unset($fields['agent'], $fields['customer']);
@@ -183,5 +210,51 @@ class PropertyController extends Controller
         $property->update($fields);
 
         return redirect()->route('admin.viewproperty')->with('success', 'Property updated successfully');
+    }
+
+    public function create()
+    {
+        $user = auth()->user();
+
+        //\Log::info('=== ADD PROPERTY DEBUG ===');
+        // \Log::info('Role Check:', [
+        //     'raw_role' => $user->role,
+        //     'is_agent_method' => $user->isAgent(),
+        //     'is_admin_method' => $user->isAdmin()
+        // ]);
+
+        // Use the existing isAgent() method
+        if ($user->isAgent()) {
+            $agentOptions = [$user->id => $user->name];
+           // \Log::info('Agent view - showing only current agent');
+        } else {
+            // For admin, show all agents
+            $agentOptions = User::where('role', 1)  // Direct query for agents
+                ->pluck('name', 'id')
+                ->toArray();
+            \Log::info('Admin view - showing all agents');
+        }
+
+        //\Log::info('Agent Options:', $agentOptions);
+
+        return Inertia::render('Admin/AddProperty', [
+            'userTypes' => UserType::toSelectArray(),
+            'countries' => Schema::hasTable('countries') ? Country::pluck('name', 'id') : [],
+            'defaultData' => [
+                'states' => [],
+                'cities' => [],
+                'currency' => null,
+            ],
+            'customerOptions' => Schema::hasTable('customers') ? Customer::pluck('name', 'id') : [],
+            'agentOptions' => $agentOptions,
+            'propertySizeUnits' => Schema::hasTable('property_size_units')
+                ? DB::table('property_size_units')->pluck('unit_key', 'id')
+                : [],
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'role' => $user->isAgent() ? 1 : 0
+            ],
+        ]);
     }
 }

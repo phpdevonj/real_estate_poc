@@ -7,6 +7,7 @@
             <table class="w-full mx-auto p-2">
                 <thead>
                     <tr class="bg-slate-300">
+                        <th class="text-left p-2">Sr No</th>
                         <th class="text-left p-2">User Name</th>
                         <th class="text-left p-2">Name</th>
                         <th class="text-left p-2">Address</th>
@@ -17,7 +18,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="user in users.data" :key="user.id">
+                    <tr v-for="(user, index) in users.data" :key="user.id">
+                        <td class="p-2">{{ users.from + index }}</td>
                         <td>{{ user.username }}</td>
                         <td>{{ user.name }}</td>
                         <td>{{ user.address }}</td>
@@ -26,8 +28,15 @@
                         <td>{{ userTypes[user.role] }}</td>
                         <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-900">
                             <Link :href="route('admin.edituser',user.id)" class="px-2 py-1 bg-blue-600 text-white rounded font-bold uppercase mr-2">Edit</Link>
-                            <Link  class="px-2 py-1 bg-red-600 text-white rounded font-bold uppercase mr-2">Delete</Link>
-                        </td>
+                            <Link
+                                :href="route('admin.deleteuser', user.id)"
+                                method="delete"
+                                as="button"
+                                class="px-2 py-1 bg-red-600 text-white rounded font-bold uppercase mr-2"
+                                @click.prevent="confirmDelete(user.id)"
+                            >
+                                Delete
+                            </Link></td>
                     </tr>
                 </tbody>
             </table>
@@ -56,5 +65,9 @@ const props = defineProps({
     users: Array,
     userTypes: Object,
 });
-
+const confirmDelete = (id) => {
+    if (confirm("Are you sure you want to delete this user?")) {
+        router.delete(route('admin.deleteuser', id));
+    }
+};
 </script>
