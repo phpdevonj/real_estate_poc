@@ -58,7 +58,7 @@
         </div>
     </section>
     <section id="category" class="mb-24">
-        <h2 class="section-heading text-center text-black my-[50px] text-4xl font-semibold">Category</h2>
+        <h2 class="section-heading text-center text-black my-[50px] text-4xl font-semibold">Categories</h2>
         <div class="container mx-auto px-4">
             <ul class="flex flex-wrap gap-5 justify-center">
                 <li class="max-w-[130px] text-center">
