@@ -15,6 +15,10 @@ use App\Enums\UserType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
+// Front Routes
+// Route::get('/home', function () {
+//     return Inertia::render('Front/Home');
+// })->name('front.home');
 // Guest Routes
 Route::middleware('guest')->group(function () {
     Route::get('/', function () {

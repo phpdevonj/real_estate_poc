@@ -22,15 +22,7 @@ Clone the project repository to your local machine:
 git clone <repository-url>
 cd <project-folder>
 
-### Step 2: Install Dependencies
-
-composer install
-
-### Step 3: Install Node Modules
-
-npm install
-
-### Step 4: Create a copy of the .env file
+### Step 2: Create a copy of the .env file
 
 cp .env.example .env
     Edit the .env file to configure your database connection and other settings:
@@ -41,6 +33,13 @@ cp .env.example .env
     DB_USERNAME=<your-database-username>
     DB_PASSWORD=<your-database-password>
 
+### Step 3: Install Dependencies
+
+composer install
+
+### Step 4: Install Node Modules
+
+npm install
 
 ### Step 5: Generate an application key
 
@@ -61,7 +60,11 @@ php artisan db:seed
 
 npm run dev
 
-### Step 9: Start the Development Server
+### step 9: Allowed storage to link images
+
+php artisan storage:link
+
+### Step 10: Start the Development Server
 
     php artisan serve
 

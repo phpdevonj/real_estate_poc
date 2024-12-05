@@ -6,6 +6,7 @@ use App\Models\City;
 use App\Models\Country;
 use App\Models\Customer;
 use App\Models\PropertySizeUnit;
+use App\Models\PropertyType;
 use App\Models\State;
 use DB;
 use Illuminate\Http\Request;
@@ -238,6 +239,7 @@ class PropertyController extends Controller
         //\Log::info('Agent Options:', $agentOptions);
 
         return Inertia::render('Admin/AddProperty', [
+            'propertyTypes' => PropertyType::pluck('name', 'category'),
             'userTypes' => UserType::toSelectArray(),
             'countries' => Schema::hasTable('countries') ? Country::pluck('name', 'id') : [],
             'defaultData' => [
