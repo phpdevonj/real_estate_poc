@@ -83,12 +83,6 @@ class PropertyController extends Controller
     {
         $user = auth()->user();
 
-        // \Log::info('User Role Check:', [
-        //     'user_id' => $user->id,
-        //     'role' => $user->role,
-        //     'is_admin' => $user->role === 0
-        // ]);
-
         $properties = Property::with([
             'agent:id,name',
             'customer:id,name',
@@ -217,26 +211,14 @@ class PropertyController extends Controller
     {
         $user = auth()->user();
 
-        //\Log::info('=== ADD PROPERTY DEBUG ===');
-        // \Log::info('Role Check:', [
-        //     'raw_role' => $user->role,
-        //     'is_agent_method' => $user->isAgent(),
-        //     'is_admin_method' => $user->isAdmin()
-        // ]);
-
-        // Use the existing isAgent() method
         if ($user->isAgent()) {
             $agentOptions = [$user->id => $user->name];
-           // \Log::info('Agent view - showing only current agent');
         } else {
             // For admin, show all agents
             $agentOptions = User::where('role', 1)  // Direct query for agents
                 ->pluck('name', 'id')
                 ->toArray();
-            \Log::info('Admin view - showing all agents');
         }
-
-        //\Log::info('Agent Options:', $agentOptions);
 
         return Inertia::render('Admin/AddProperty', [
             'propertyTypes' => PropertyType::pluck('name', 'category'),
@@ -259,4 +241,10 @@ class PropertyController extends Controller
             ],
         ]);
     }
+    public function getProperty()
+    {
+        $products = Property::all(); // Or use pagination
+        return response()->json($products);
+    }
+
 }

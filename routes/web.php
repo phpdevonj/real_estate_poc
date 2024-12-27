@@ -8,6 +8,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Middleware\RoleBasedAccess;
 use App\Models\Country;
 use App\Models\Customer;
+use App\Models\PropertyType;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\User;
@@ -15,15 +16,20 @@ use App\Enums\UserType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-// Front Routes
-// Route::get('/home', function () {
-//     return Inertia::render('Front/Home');
-// })->name('front.home');
-// Guest Routes
 Route::middleware('guest')->group(function () {
     Route::get('/', function () {
-        return Inertia::render('Home');
-    })->name('home');
+        $categories = PropertyType::select('id', 'name', 'category')->get();
+
+        // Debug output to Laravel log
+        \Log::info('Categories data:', [
+            'count' => $categories->count(),
+            'data' => $categories->toArray()
+        ]);
+
+        return Inertia::render('Home', [
+            'property_categories' => $categories
+        ]);
+        })->name('home');
     Route::inertia('/login', 'Auth/Login')->name('login');
     Route::post('/login', [AuthController::class, 'login']);
 });
@@ -117,3 +123,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/test', function () {
     return 'test';
 })->middleware([RoleBasedAccess::class . ':0'])->name('test');
+
+Route::get('/property', [PropertyController::class, 'getProperty']);
+Route::get('/agents', [UserController::class, 'getAgents']);
+

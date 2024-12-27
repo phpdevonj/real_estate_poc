@@ -28,40 +28,34 @@
                         <td>{{ property.agent?.name }}</td>
                         <td>{{ property.customer?.name }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm leading-5">
-    <!-- Remove the extra template wrapper -->
-    <Link
-        v-if="user.role === 0"
-        :href="route('admin.editproperty', property.id)"
-        class="px-2 py-1 bg-blue-600 text-white rounded font-bold uppercase mr-2"
-    >
-        Edit
-    </Link>
+                            <!-- Remove the extra template wrapper -->
+                            <Link
+                                v-if="user.role === 0"
+                                :href="route('admin.editproperty', property.id)"
+                                class="px-2 py-1 bg-blue-600 text-white rounded font-bold uppercase mr-2"
+                            >
+                                Edit
+                            </Link>
 
-    <button
-        v-if="user.role === 0"
-        @click="deleteProperty(property.id)"
-        class="px-2 py-1 bg-red-600 text-white rounded font-bold uppercase mr-2"
-    >
-        Delete
-    </button>
-
-    <!-- Show toggle status button for both admin and agent -->
-    <button
-        @click="togglePropertyStatus(property.id)"
-        :class="`px-2 py-1 text-white rounded font-bold uppercase ${
-            property.flag
-                ? 'bg-green-600'
-                : 'bg-yellow-600'
-        }`"
-    >
-        {{ property.flag ? "Mark Sold" : "Mark Available" }}
-    </button>
-
-    <!-- Add temporary debug output -->
-    <!-- <span class="text-xs text-gray-500">
-        (Role: {{ user.role }}, Can Edit: {{ user.role === 0 }})
-    </span> -->
-</td>
+                            <button
+                                v-if="user.role === 0"
+                                @click="deleteProperty(property.id)"
+                                class="px-2 py-1 bg-red-600 text-white rounded font-bold uppercase mr-2"
+                            >
+                                Delete
+                            </button>
+                            <!-- Show toggle status button for both admin and agent -->
+                            <button
+                                @click="togglePropertyStatus(property.id)"
+                                :class="`px-2 py-1 text-white rounded font-bold uppercase ${
+                                    property.flag
+                                        ? 'bg-green-600'
+                                        : 'bg-yellow-600'
+                                }`"
+                            >
+                                {{ property.flag ? "Mark Sold" : "Mark Available" }}
+                            </button>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -113,9 +107,9 @@ const togglePropertyStatus = (id) => {
     router.put(route("admin.togglepropertystatus", id));
 };
 
-onMounted(() => {
-    console.log('Component mounted');
-    console.log('User details:', props.user);
-    console.log('Can edit/delete:', props.user.role === 0);
-});
+// onMounted(() => {
+//     console.log('Component mounted');
+//     console.log('User details:', props.user);
+//     console.log('Can edit/delete:', props.user.role === 0);
+// });
 </script>
