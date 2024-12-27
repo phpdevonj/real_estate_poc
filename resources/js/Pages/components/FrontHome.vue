@@ -1,24 +1,95 @@
+<script setup>
+import { defineProps, computed, ref, onMounted } from 'vue';
+import { useForm } from '@inertiajs/vue3';
+const props = defineProps({
+    name: {
+        type: String,
+        required: true,
+    },
+    categories: {
+        type: Array,
+        required: true,
+    },
+    agents: {
+        type: Array,
+        required: true,
+    },
+});
+// Define reactive state
+const products = ref([]);
+const fetchProducts = async () => {
+    try {
+        const response = await axios.get('/property');
+        products.value = response.data;
+    } catch (error) {
+        console.error('Error fetching property:', error);
+    }
+};
+const agents = ref([]);
+onMounted(async () => {
+    try {
+        const response = await fetch('/agents'); // Adjust the URL as per your route
+        const data = await response.json();
+        agents.value = data; // Assign data to the ref
+    } catch (error) {
+        console.error('Error fetching agents:', error);
+    }
+});
+// Lifecycle hook
+onMounted(fetchProducts);
+const hasCategories = computed(() => {
+    return props.categories && Array.isArray(props.categories) && props.categories.length > 0;
+});
+// Compute random categories
+const randomCategories = computed(() => {
+    if (!hasCategories.value) return [];
+    return [...props.categories] // Clone array to avoid mutating original
+        .sort(() => Math.random() - 0.5) // Shuffle categories
+        .slice(0, 4); // Pick first 4
+});
+// Compute displayed image for each product
+const getDisplayedImage = (product) => {
+    // Check if photos_url exists and has at least one image
+    return product.photos_url && product.photos_url.length > 0
+        ? product.photos_url[0]
+        : '../../../images/products/f1.jpg'; // Replace with your default image path
+};
+// Login form logic
+const form = useForm({
+    email: null,
+    password: null,
+    remember: null,
+});
+const submit = () => {
+    form.post(route('login'), {
+        onFinish: () => {
+            form.reset('password');
+        },
+        preserveScroll: true,
+    });
+};
+</script>
+<style scoped>
+.product-images img {
+    width: 250px;
+    height: 165px;
+    object-fit: cover; /* Ensures the image maintains aspect ratio and fills the area */
+}
+</style>
 <template>
     <section
         class="banner-section bg-cover bg-center mt-[62px] h-calc-100vh-96px bg-banner-image flex justify-center items-center">
         <div class="banner-inner-block w-full">
-            <div
-                class="items-slider mb-20 relative overflow-hidden before:content-[''] before:w-full before:h-[5px] before:bg-[#088178] before:bg-opacity-40 before:absolute before:top-1/2">
-                <div class="text-white text-4xl"><a href="#">Ready to Move Flats</a></div>
-                <div class="text-white text-4xl"><a href="#">Ready to Move House</a></div>
-                <div class="text-white text-4xl"><a href="#">Ready to Move villa</a></div>
+            <div class="items-slider mb-20 relative overflow-hidden before:content-[''] before:w-full before:h-[5px] before:bg-[#088178] before:bg-opacity-40 before:absolute before:top-1/2">
 
-            </div>
-            <div class="all-item-slider relative overflow-hidden before:content-[''] before:w-full before:h-[5px] before:bg-[#088178] before:bg-opacity-40 before:absolute before:top-1/2"
-                dir="rtl">
-                <div class="text-white text-4xl">
-                    <a href="#">Latest Property</a>
+                <div v-if="hasCategories" class="categories-container">
+                    <div v-for="category in props.categories" :key="category.id" class="text-white text-4xl mb-2">
+                        <a href="#" class="category-link">{{ category.name }}</a>
+                    </div>
                 </div>
-                <div class="text-white text-4xl"><a href="#">Latest Property</a></div>
-                <div class="text-white text-4xl"><a href="#">Latest Property</a></div>
-                <div class="text-white text-4xl"><a href="#">Latest Property</a></div>
-                <div class="text-white text-4xl"><a href="#">Latest Property</a></div>
-
+                <div v-else class="text-white no-categories">
+                    Loading categories...
+                </div>
             </div>
         </div>
     </section>
@@ -57,59 +128,39 @@
             </div>
         </div>
     </section>
+
     <section id="category" class="mb-24">
-        <h2 class="section-heading text-center text-black my-[50px] text-4xl font-semibold">Categories</h2>
-        <div class="container mx-auto px-4">
-            <ul class="flex flex-wrap gap-5 justify-center">
-                <li class="max-w-[130px] text-center">
-                    <a href="" class="flex flex-col items-center justify-center group">
-                        <div class="border p-4 shadow-lg rounded-full mb-2 group-hover:scale-110 ease-in duration-300">
-                            <img src="../../../images/categery/home.png" width="67" height="67">
-                        </div>
-                        <span class="text-[14px]">Ready to move House</span>
-                    </a>
-                </li>
-                <li class="max-w-[130px] text-center">
-                    <a href="" class="flex flex-col items-center justify-center group">
-                        <div class="border p-4 shadow-lg rounded-full mb-2 group-hover:scale-110 ease-in duration-300">
-                            <img src="../../../images/categery/apartment.png" width="67" height="67">
-                        </div>
-                        <span class="text-[14px]">Ready to move builder Floor</span>
-                    </a>
-                </li>
-                <li class="max-w-[130px] text-center">
-                    <a href="" class="flex flex-col items-center justify-center group">
-                        <div class="border p-4 shadow-lg rounded-full mb-2 group-hover:scale-110 ease-in duration-300">
-                            <img src="../../../images/categery/residential.png" width="67" height="67">
-                        </div>
-                        <span class="text-[14px]">Ready to move Flats</span>
-                    </a>
-                </li>
-                <li class="max-w-[130px] text-center">
-                    <a href="" class="flex flex-col items-center justify-center group">
-                        <div class="border p-4 shadow-lg rounded-full mb-2 group-hover:scale-110 ease-in duration-300">
-                            <img src="../../../images/categery/luxury.png" width="67" height="67">
-                        </div>
-                        <span class="text-[14px]">Luxury Flats</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
+      <h2 class="section-heading text-center text-black my-[50px] text-4xl font-semibold">Categories</h2>
+      <div class="container mx-auto px-4">
+        <ul class="flex flex-wrap gap-5 justify-center">
+          <li
+            v-for="category in randomCategories"
+            :key="category.id"
+            class="max-w-[130px] text-center"
+          >
+            <a href="" class="flex flex-col items-center justify-center group">
+              <div class="border p-4 shadow-lg rounded-full mb-2 group-hover:scale-110 ease-in duration-300">
+                <!-- <img :src="getCategoryImage(category)" width="67" height="67" /> -->
+              </div>
+              <span class="text-[14px]">{{ category.name }}</span>
+            </a>
+          </li>
+        </ul>
+      </div>
     </section>
     <section id="features-product" class="container mx-auto px-4 pb-14">
         <div class="section-title text-center  my-[50px]">
             <h2 class="section-heading text-center text-black text-4xl mb-4 font-semibold">Featured Products</h2>
-            <p class="text-sm text-[#465b52]">Summer Collection New Morden Design</p>
+            <p class="text-sm text-[#465b52]">New Categories</p>
         </div>
         <div id="pro-collection"
             class="w-full grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            <div class="product-cart border rounded-3xl shadow-lg cursor-pointer p-4 h-max">
-                <img class="product-image rounded-3xl  mx-auto object-contain h-[300px] "
-                    src="../../../images/products/f1.jpg" />
-                <span class="product-category text-[16px] text-[#969696] mt-2 inline-block">adidas</span>
-                <h4
-                    class="product-title overflow-hidden whitespace-nowrap text-ellipsis text-[18px] text-[#292929] font-semibold">
-                    Cartoon Astronaut T-Shirts</h4>
+
+            <div class="product-cart border rounded-3xl shadow-lg cursor-pointer p-4 h-max product-item" v-for="product in products" :key="product.id">
+                <div class="product-images">
+                    <img :src="getDisplayedImage(product)" alt="Product Image" />
+                </div>
+                <h4 class="product-title overflow-hidden whitespace-nowrap text-ellipsis text-[18px] text-[#292929] font-semibold">{{ product.description }}</h4>
                 <div class="stars">
                     <i class="fa fa-star text-yellow-500" aria-hidden="true"></i>
                     <i class="fa fa-star text-yellow-500" aria-hidden="true"></i>
@@ -118,7 +169,6 @@
                     <i class="fa fa-star text-yellow-500" aria-hidden="true"></i>
                 </div>
                 <div class="flex justify-between items-center mt-2">
-                    <h5 class="price text-[#088178] font-semibold text-[16px]">$78</h5>
                     <a href="" class="p-4 bg-[#c7e9e75e] rounded-full flex justify-center items-center">
                         <i class="fa fa-shopping-cart text-[#088178]" aria-hidden="true"></i>
                     </a>
@@ -136,30 +186,23 @@
     </section>
     <section id="new-product" class="container mx-auto px-4 pb-14">
         <div class="section-title text-center  my-[50px]">
-            <h2 class="section-heading text-center text-black text-4xl mb-4 font-semibold">New Arrivals</h2>
-            <p class="text-sm text-[#465b52]">Summer Collection New Morden Design</p>
+            <h2 class="section-heading text-center text-black text-4xl mb-4 font-semibold">New Agents</h2>
+            <p class="text-sm text-[#465b52]"></p>
         </div>
         <div id="new-collection"
             class="w-full grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            <div class="new-product-cart border rounded-3xl shadow-lg cursor-pointer p-4 h-max">
-                <img class="new-product-image rounded-3xl  mx-auto object-contain h-[300px] " src="" />
-                <span class="new-product-category text-[16px] text-[#969696] mt-2 inline-block"></span>
-                <h4
-                    class="new-product-title overflow-hidden whitespace-nowrap text-ellipsis text-[18px] text-[#292929] font-semibold">
+            <div class="new-product-cart border rounded-3xl shadow-lg cursor-pointer p-4 h-max" v-for="agent in agents" :key="agent.id">
+                <img class="new-product-image rounded-3xl  mx-auto object-contain h-[300px]" />
+
+                <h4 class="new-product-title overflow-hidden whitespace-nowrap text-ellipsis text-[18px] text-[#292929] font-semibold">{{ agent.name }}
                 </h4>
-                <div class="stars">
-                    <i class="fa fa-star text-yellow-500" aria-hidden="true"></i>
-                    <i class="fa fa-star text-yellow-500" aria-hidden="true"></i>
-                    <i class="fa fa-star text-yellow-500" aria-hidden="true"></i>
-                    <i class="fa fa-star text-yellow-500" aria-hidden="true"></i>
-                    <i class="fa fa-star text-yellow-500" aria-hidden="true"></i>
-                </div>
-                <div class="flex justify-between items-center mt-2">
+
+                <!-- <div class="flex justify-between items-center mt-2">
                     <h5 class="new-product-price text-[#088178] font-semibold text-[16px]"></h5>
                     <a href="" class="p-4 bg-[#c7e9e75e] rounded-full flex justify-center items-center">
                         <i class="fa fa-shopping-cart text-[#088178]" aria-hidden="true"></i>
                     </a>
-                </div>
+                </div> -->
             </div>
         </div>
     </section>
@@ -300,16 +343,13 @@
                 <div class="newsletter-form relative flex">
                     <input type="email" placeholder="Your email address" id="email-address-input"
                         class="bg-[#d1d0d0] w-full h-14 sm:w-72 p-5 rounded-tl-lg rounded-bl-lg">
-                    <button
+                    <!-- <button
                         class="w-[180px] bg-[#088178] text-lg rounded-tr-lg rounded-br-lg h-14 cursor-pointer text-white">Sign
-                        Up</button>
+                        Up</button> -->
                 </div>
             </div>
         </div>
     </section>
-
-
-
     <div id="login-modal" tabindex="-1" aria-hidden="true"
         class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
         <div class="login-modal-container group relative p-4 w-full max-w-2xl h-[500px] bg-[#e3e6f3] rounded-md">
@@ -345,7 +385,7 @@
             </div>
             <div
                 class="form-container sign-in-container top-0 left-0 h-full absolute w-[60%] px-10 transition-all duration-600 ease-in-out z-30 bg-[#e3e6f3] rounded-md group-[.right-panal-active]:transform group-[.right-panal-active]:translate-x-[20%] group-[.right-panal-active]:opacity-0 group-[.right-panal-active]:z-10">
-                <form action="#" class="h-full flex flex-col items-center justify-center">
+                <form @submit.prevent="submit" class="h-full flex flex-col items-center justify-center">
                     <h1 class="text-center text-[#088178] text-2xl mb-4 font-semibold">Sign in</h1>
                     <div class="social-container my-5 flex">
                         <a href="#"
@@ -360,14 +400,21 @@
                     </div>
                     <span class="text-[12px]">or use your account</span>
                     <div class="infield relative my-2 w-full">
-                        <input class="login-input" type="email" placeholder="Email" name="email" />
+                        <input class="login-input" type="email" placeholder="Email" name="email" v-model="form.email" :message="form.errors.email" />
                         <label class=""></label>
                     </div>
+                    <div v-if="form.errors.email" class="text-red-500 text-sm mt-1">
+                        {{ form.errors.email }}
+                    </div>
                     <div class="infield relative my-2 w-full">
-                        <input class="login-input" type="password" placeholder="Password" />
+                        <input class="login-input" type="password" placeholder="Password" v-model="form.password"
+                        :message="form.errors.password"/>
                         <label></label>
                     </div>
-                    <a href="#" class="forgot block w-full text-right text-[12px]">Forgot your password?</a>
+                    <div v-if="form.errors.password" class="text-red-500 text-sm mt-1">
+                        {{ form.errors.password }}
+                    </div>
+                    <!-- <a href="#" class="forgot block w-full text-right text-[12px]">Forgot your password?</a> -->
                     <button
                         class="w-[180px] bg-[#088178] text-lg rounded-tr-lg rounded-lg h-14 mt-5 cursor-pointer text-white">Sign
                         In</button>
@@ -388,12 +435,12 @@
                     </div>
                     <div
                         class="overlay-panel rounded-md bg-[#088178] overlay-right w-full absolute right-0 transform translate-x-0 flex flex-col items-center justify-center px-5 h-full group-[.right-panal-active]:transform group-[.right-panal-active]:translate-x-[100%]">
-                        <!-- <h1></h1> -->
+                        <h1></h1>
                         <p class="text-white text-center text-sm">Enter your personal details and start journey with us
                         </p>
-                        <button
+                        <!-- <button
                             class="sign-up inline-block mt-5 decoration-0 font-bold text-[14px] rounded-md text-white border py-3 px-9 transition hover:bg-[#ffffff] hover:text-[#088178] hover:border-transparent">Sign
-                            Up</button>
+                            Up</button> -->
                     </div>
                 </div>
                 <button id="overlayBtn"></button>

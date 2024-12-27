@@ -86,4 +86,9 @@ class UserController extends Controller
         $user->delete();
         return redirect()->route('admin.viewuser')->with('greet', 'User successfully deleted!');
     }
+
+    public function getAgents(){
+        $agents = User::all();
+        return response()->json($agents);
+    }
 }

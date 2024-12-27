@@ -14,13 +14,9 @@ const props = defineProps({
     user: Object,
     defaultData: Object
 });
-console.log('=== ADD PROPERTY VUE DEBUG ===');
-console.log('User:', props.user);
-console.log('Agent Options:', props.agentOptions);
 
 const user = ref(props.user);
 const agentOptions = ref(props.agentOptions);
-
 
 const countries = ref(props.countries);
 const defaultData = ref(props.defaultData);
@@ -49,7 +45,6 @@ const form = useForm({
     state: "",
     city: "",
 });
-
 // Watch for changes to update the form
 watch(selectedCountry, (value) => {
     form.country = value;
@@ -133,7 +128,6 @@ const fetchCountryData = async () => {
     }
 };
 const fileErrors = ref([]);
-
 // Handle file input validation
 const changePhotos = (e) => {
     const files = Array.from(e.target.files);
@@ -216,7 +210,6 @@ const cancel = () => {
                 v-model="form.street"
                 :message="form.errors.street"
             />
-
             <!-- Country Dropdown -->
             <div class="flex mr-5 pb-1 mb-2">
                 <label for="country" class="w-48">Country:</label>
@@ -237,7 +230,6 @@ const cancel = () => {
                 </select>
                 <p class="error mt-2">{{ form.errors.country }}</p>
             </div>
-
             <!-- State Dropdown -->
             <div class="flex mr-5 pb-1 mb-2">
                 <label for="state" class="w-48">State:</label>
@@ -254,7 +246,6 @@ const cancel = () => {
                 </select>
                 <p class="error mt-2">{{ form.errors.state }}</p>
             </div>
-
             <!-- City Dropdown -->
             <div class="flex mr-5 pb-1 mb-2">
                 <label for="city" class="w-48">City:</label>
@@ -271,7 +262,6 @@ const cancel = () => {
                 </select>
                 <p class="error mt-2">{{ form.errors.city }}</p>
             </div>
-
             <TextInput
                 name="Price"
                 v-model="form.price"
@@ -285,7 +275,6 @@ const cancel = () => {
                     {{ currency.currency_symbol }}
                 </div>
             </div>
-
             <div class="flex mr-5 pb-1 mb-2 flex-col">
                 <div class="flex">
                     <label for="photos" class="w-48">Photos (Max 4)</label>
@@ -317,13 +306,11 @@ const cancel = () => {
                 </p>
                 <p class="error mt-2">{{ form.errors.photos }}</p>
             </div>
-
             <TextInput
                 name="Size"
                 v-model="form.size"
                 :message="form.errors.size"
             />
-
             <div class="flex mr-5 pb-1 mb-2">
                 <label for="unit" class="w-48">Measuring Unit</label>
                 <select id="unit" v-model="form.unit" class="w-96">
@@ -338,7 +325,6 @@ const cancel = () => {
                 </select>
                 <p class="error mt-2">{{ form.errors.unit }}</p>
             </div>
-
             <div class="flex mr-5 pb-1 mb-2">
                 <label for="agent" class="w-48">Agent</label>
                 <select

@@ -1,13 +1,19 @@
 <template>
-    <div class="flex justify-between px-10">
-        <h1>Welcome Real Estate</h1>
-        <a class="bg-blue-400 p-3 rounded text-right" :href="route('admin.index')">
-            Admin
-        </a>
-    </div>
+    <FrontHome
+        :categories="property_categories"
+        name="home"
+    />
 </template>
 
 <script setup>
 import FrontLayout from '../Layouts/FrontLayout.vue';
+import FrontHome from './components/FrontHome.vue';
+
+const props = defineProps({
+    property_categories: {
+        type: Array,
+        required: true,
+    }
+});
 defineOptions({ layout: FrontLayout });
 </script>
